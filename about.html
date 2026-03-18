@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>vantablack — about</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
+    :root{--bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--border:#222;--border-bright:#333;--text:#c8c8c8;--text-dim:#555;--text-bright:#e8e8e8;--accent:#e63946;--accent2:#ff6b6b;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--transition:cubic-bezier(0.23,1,0.32,1);}
+    [data-theme="cyan"]{--accent:#00d4ff;--accent2:#7fffff;}[data-theme="mono"]{--accent:#aaaaaa;--accent2:#cccccc;}[data-theme="green"]{--accent:#39e67a;--accent2:#6bffaa;}[data-theme="purple"]{--accent:#a855f7;--accent2:#c084fc;}[data-theme="orange"]{--accent:#f97316;--accent2:#fb923c;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-mono);}
+    .noise{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+    .topbar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:rgba(8,8,8,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:200;}
+    .logo{font-family:var(--font-display);font-weight:800;font-size:1rem;letter-spacing:0.1em;color:var(--text-bright);text-decoration:none;}
+    .logo .accent{color:var(--accent);}
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-link{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:color 0.2s;cursor:pointer;background:none;border:none;padding:0;font-family:var(--font-mono);}
+    .nav-link:hover,.nav-link.active{color:var(--text-bright);}
+    .nav-dropdown{position:relative;}
+    .dropdown-toggle{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);background:none;border:none;cursor:pointer;font-family:var(--font-mono);padding:0;transition:color 0.2s;}
+    .dropdown-toggle:hover,.dropdown-toggle.active{color:var(--text-bright);}
+    .dropdown-menu{display:none;position:absolute;top:calc(100% + 10px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:4px;min-width:140px;overflow:hidden;z-index:300;}
+    .dropdown-menu.open{display:block;}
+    .dropdown-item{display:block;padding:9px 16px;font-size:0.68rem;letter-spacing:0.1em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:background 0.15s,color 0.15s;}
+    .dropdown-item:hover,.dropdown-item.active{background:var(--bg3);color:var(--text-bright);}
+    .page{padding:0 32px 60px;max-width:760px;margin:0 auto;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+    /* Hero */
+    .about-hero{text-align:center;padding:90px 20px 50px;animation:fadeUp 0.6s var(--transition) both;}
+    .about-logo{font-family:var(--font-display);font-size:clamp(1.8rem,6vw,4rem);font-weight:800;color:rgba(200,200,200,0.08);letter-spacing:0.08em;line-height:1;margin-bottom:20px;user-select:none;text-align:center;display:block;}
+    .about-logo span{color:rgba(230,57,70,0.3);}
+    .about-tagline{font-size:0.7rem;letter-spacing:0.4em;color:var(--text-dim);text-transform:uppercase;}
+
+    /* Sections */
+    .about-section{margin-bottom:48px;animation:fadeUp 0.6s var(--transition) both;}
+    .about-section:nth-child(2){animation-delay:0.1s;}
+    .about-section:nth-child(3){animation-delay:0.15s;}
+    .about-section:nth-child(4){animation-delay:0.2s;}
+    .about-section:nth-child(5){animation-delay:0.25s;}
+    .section-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+    .section-num{font-size:0.58rem;letter-spacing:0.2em;color:var(--accent);font-weight:700;}
+    .section-name{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--text-bright);letter-spacing:0.05em;}
+    .about-p{font-size:0.78rem;line-height:1.9;color:var(--text);margin-bottom:14px;}
+    .about-p:last-child{margin-bottom:0;}
+    .about-p a{color:var(--accent);text-decoration:none;}
+    .about-p a:hover{text-decoration:underline;}
+    .highlight{color:var(--text-bright);font-weight:700;}
+
+    /* Stats row */
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0;}
+    .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:20px;text-align:center;}
+    .stat-num{font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--accent);line-height:1;}
+    .stat-label{font-size:0.58rem;letter-spacing:0.18em;color:var(--text-dim);text-transform:uppercase;margin-top:6px;}
+
+    /* Pillars */
+    .pillars{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:16px;}
+    .pillar{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:18px;}
+    .pillar-icon{font-size:1.3rem;margin-bottom:10px;}
+    .pillar-name{font-family:var(--font-display);font-size:0.85rem;font-weight:700;color:var(--text-bright);margin-bottom:6px;}
+    .pillar-desc{font-size:0.67rem;line-height:1.7;color:var(--text-dim);}
+
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  
+.nav-dropdown { position: relative; }
+.dropdown-toggle {
+  font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-dim);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); padding: 0; transition: color 0.2s;
+  text-transform: lowercase;
+}
+.dropdown-toggle:hover, .dropdown-toggle.active { color: var(--text-bright); }
+.dropdown-menu {
+  display: none; position: absolute; top: calc(100% + 10px); right: 0;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 4px;
+  min-width: 140px; overflow: hidden; z-index: 300;
+}
+.dropdown-menu.open { display: block; animation: dropIn 0.15s var(--transition); }
+.dropdown-item {
+  display: block; padding: 9px 16px; font-size: 0.68rem;
+  letter-spacing: 0.1em; color: var(--text-dim); text-decoration: none;
+  text-transform: lowercase; transition: background 0.15s, color 0.15s;
+}
+.dropdown-item:hover, .dropdown-item.active { background: var(--bg3); color: var(--text-bright); }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+  
+/* ── Page animations ─────────────────────────────────────── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+.anim-1 { animation: fadeUp 0.5s 0.05s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-2 { animation: fadeUp 0.5s 0.12s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-3 { animation: fadeUp 0.5s 0.19s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-4 { animation: fadeUp 0.5s 0.26s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-5 { animation: fadeUp 0.5s 0.33s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-fade { animation: fadeIn 0.5s 0.05s both; }
+
+  
+/* ── Custom cursor ───────────────────────────────────────── */
+*, *::before, *::after { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23F85050" stroke="%23000000" stroke-width="2" d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z"></path></svg>') 0 0, auto !important; }
+
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <nav class="topbar">
+    <a href="index.html" class="logo">vanta<span class="accent">black</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">home</a>
+      <a href="games.html" class="nav-link">games</a>
+      <a href="music.html" class="nav-link">music</a>
+      <a href="proxy.html" class="nav-link">proxy</a>
+      <a href="ai.html" class="nav-link">AI</a>
+      <a href="index.html" class="nav-link">settings</a>
+      <div class="nav-dropdown">
+        <button class="dropdown-toggle active" id="moreBtn">more ▾</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+        <a href="about.html" class="dropdown-item active">about</a>
+        <a href="changelog.html" class="dropdown-item">changelog</a>
+        <a href="themes.html" class="dropdown-item">themes</a>
+        <a href="bookmarks.html" class="dropdown-item">bookmarks</a>
+        <a href="partners.html" class="dropdown-item">partners</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="about-hero">
+      <div class="about-logo">vanta<span>black</span></div>
+      <div class="about-tagline">unrestricted · untraceable · absolute</div>
+</div>
+
+<div class="page">
+    <div class="about-section">
+      <div class="section-head"><span class="section-num">01</span><span class="section-name">What is vantablack?</span></div>
+      <p class="about-p">vantablack is a <span class="highlight">fast, minimal web proxy</span> built for unrestricted browsing. Named after the darkest substance known — a material so dark it absorbs virtually all light — vantablack is built around a single idea: <span class="highlight">nothing should be blocked.</span></p>
+      <p class="about-p">Beyond the proxy, vantablack is a full platform — with a curated games library, a built-in music player, bookmark management, and a clean interface that stays out of your way.</p>
+    </div>
+
+    <div class="about-section">
+      <div class="section-head"><span class="section-num">02</span><span class="section-name">By the numbers</span></div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num">150+</div><div class="stat-label">games</div></div>
+        <div class="stat-card"><div class="stat-num">0</div><div class="stat-label">ads</div></div>
+        <div class="stat-card"><div class="stat-num">∞</div><div class="stat-label">access</div></div>
+      </div>
+    </div>
+
+    <div class="about-section">
+      <div class="section-head"><span class="section-num">03</span><span class="section-name">Core principles</span></div>
+      <div class="pillars">
+        <div class="pillar">
+          <div class="pillar-icon">⚡</div>
+          <div class="pillar-name">Speed</div>
+          <div class="pillar-desc">Built on a lightweight Node.js server with no bloat. Pages load fast, proxied content loads fast.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">🔒</div>
+          <div class="pillar-name">Privacy</div>
+          <div class="pillar-desc">No tracking, no ads, no logs. Tab cloaking lets you disguise the page at a moment's notice.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">◈</div>
+          <div class="pillar-name">Minimal</div>
+          <div class="pillar-desc">No frameworks. No dependencies beyond Node. Clean design with purposeful details.</div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">🎮</div>
+          <div class="pillar-name">Entertainment</div>
+          <div class="pillar-desc">150+ unblocked games, a full Spotify music player, and more — all in one place.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-section">
+      <div class="section-head"><span class="section-num">04</span><span class="section-name">Credits</span></div>
+      <p class="about-p">vantablack is built on the shoulders of great open source projects. Games are sourced from <a href="https://3kh0.github.io" target="_blank">3kh0</a> and <a href="https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/" target="_blank">Ultimate Game Stash</a>. Proxy infrastructure is powered by <a href="https://github.com/titaniumnetwork-dev/Ultraviolet" target="_blank">Titanium Network — Ultraviolet</a>.</p>
+    </div>
+  </div>
+
+  <script>
+    try{const s=JSON.parse(localStorage.getItem('vanta_settings')||'{}');if(s.theme)document.documentElement.setAttribute('data-theme',s.theme);}catch{}
+    const btn=document.getElementById('moreBtn');const menu=document.getElementById('dropdownMenu');
+    if(btn&&menu){btn.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open');});document.addEventListener('click',()=>menu.classList.remove('open'));}
+  
+
+  </script>
+
+  <script>
+  document.querySelectorAll('.about-hero').forEach(el => el.classList.add('anim-1'));
+  document.querySelectorAll('.about-section:nth-child(1)').forEach(el => el.classList.add('anim-2'));
+  document.querySelectorAll('.about-section:nth-child(2)').forEach(el => el.classList.add('anim-3'));
+  document.querySelectorAll('.about-section:nth-child(3)').forEach(el => el.classList.add('anim-4'));
+  document.querySelectorAll('.about-section:nth-child(4)').forEach(el => el.classList.add('anim-5'));
+  </script>
+</body>
+</html>

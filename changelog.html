@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>vantablack — changelog</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
+    :root{--bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--border:#222;--border-bright:#333;--text:#c8c8c8;--text-dim:#555;--text-bright:#e8e8e8;--accent:#e63946;--accent2:#ff6b6b;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--transition:cubic-bezier(0.23,1,0.32,1);}
+    [data-theme="cyan"]{--accent:#00d4ff;--accent2:#7fffff;}[data-theme="mono"]{--accent:#aaaaaa;--accent2:#cccccc;}[data-theme="green"]{--accent:#39e67a;--accent2:#6bffaa;}[data-theme="purple"]{--accent:#a855f7;--accent2:#c084fc;}[data-theme="orange"]{--accent:#f97316;--accent2:#fb923c;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-mono);}
+    .noise{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+    .topbar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:rgba(8,8,8,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:200;}
+    .logo{font-family:var(--font-display);font-weight:800;font-size:1rem;letter-spacing:0.1em;color:var(--text-bright);text-decoration:none;}
+    .logo .accent{color:var(--accent);}
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-link{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:color 0.2s;cursor:pointer;background:none;border:none;padding:0;font-family:var(--font-mono);}
+    .nav-link:hover,.nav-link.active{color:var(--text-bright);}
+    .nav-dropdown{position:relative;}
+    .dropdown-toggle{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);background:none;border:none;cursor:pointer;font-family:var(--font-mono);padding:0;transition:color 0.2s;}
+    .dropdown-toggle:hover,.dropdown-toggle.active{color:var(--text-bright);}
+    .dropdown-menu{display:none;position:absolute;top:calc(100% + 10px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:4px;min-width:140px;overflow:hidden;z-index:300;}
+    .dropdown-menu.open{display:block;}
+    .dropdown-item{display:block;padding:9px 16px;font-size:0.68rem;letter-spacing:0.1em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:background 0.15s,color 0.15s;}
+    .dropdown-item:hover,.dropdown-item.active{background:var(--bg3);color:var(--text-bright);}
+    .page{padding:90px 32px 80px;max-width:720px;margin:0 auto;}
+    .page-header{margin-bottom:48px;animation:fadeUp 0.5s var(--transition) both;}
+    .page-title{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--text-bright);letter-spacing:0.05em;margin-bottom:8px;}
+    .page-title span{color:var(--accent);}
+    .page-sub{font-size:0.62rem;letter-spacing:0.25em;color:var(--text-dim);text-transform:uppercase;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+    /* Timeline */
+    .timeline{position:relative;padding-left:24px;}
+    .timeline::before{content:'';position:absolute;left:0;top:8px;bottom:0;width:1px;background:var(--border);}
+
+    .release{position:relative;margin-bottom:44px;animation:fadeUp 0.5s var(--transition) both;}
+    .release:nth-child(1){animation-delay:0.05s;}
+    .release:nth-child(2){animation-delay:0.1s;}
+    .release:nth-child(3){animation-delay:0.15s;}
+    .release::before{content:'';position:absolute;left:-28px;top:8px;width:9px;height:9px;border-radius:50%;background:var(--border);border:2px solid var(--bg);}
+    .release.latest::before{background:var(--accent);box-shadow:0 0 8px rgba(230,57,70,0.5);}
+
+    .release-header{display:flex;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+    .release-ver{font-family:var(--font-display);font-size:1.1rem;font-weight:800;color:var(--text-bright);letter-spacing:0.05em;}
+    .release-date{font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;}
+    .release-badge{font-size:0.52rem;letter-spacing:0.15em;padding:3px 8px;border-radius:2px;text-transform:uppercase;}
+    .badge-latest{background:rgba(230,57,70,0.15);color:var(--accent);border:1px solid rgba(230,57,70,0.3);}
+    .badge-major{background:rgba(100,100,255,0.1);color:#8888ff;border:1px solid rgba(100,100,255,0.2);}
+    .badge-minor{background:rgba(100,200,100,0.1);color:#88cc88;border:1px solid rgba(100,200,100,0.2);}
+    .badge-patch{background:rgba(180,180,100,0.1);color:#cccc88;border:1px solid rgba(180,180,100,0.2);}
+
+    .changes{list-style:none;display:flex;flex-direction:column;gap:6px;}
+    .change{display:flex;align-items:flex-start;gap:10px;font-size:0.73rem;line-height:1.6;color:var(--text);}
+    .change-type{font-size:0.55rem;letter-spacing:0.1em;padding:2px 7px;border-radius:2px;text-transform:uppercase;flex-shrink:0;margin-top:2px;font-weight:700;}
+    .type-new{background:rgba(46,204,113,0.12);color:#2ecc71;border:1px solid rgba(46,204,113,0.2);}
+    .type-fix{background:rgba(230,57,70,0.12);color:var(--accent);border:1px solid rgba(230,57,70,0.2);}
+    .type-improve{background:rgba(52,152,219,0.12);color:#3498db;border:1px solid rgba(52,152,219,0.2);}
+    .type-remove{background:rgba(180,100,100,0.12);color:#cc8888;border:1px solid rgba(180,100,100,0.2);}
+
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  
+.nav-dropdown { position: relative; }
+.dropdown-toggle {
+  font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-dim);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); padding: 0; transition: color 0.2s;
+  text-transform: lowercase;
+}
+.dropdown-toggle:hover, .dropdown-toggle.active { color: var(--text-bright); }
+.dropdown-menu {
+  display: none; position: absolute; top: calc(100% + 10px); right: 0;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 4px;
+  min-width: 140px; overflow: hidden; z-index: 300;
+}
+.dropdown-menu.open { display: block; animation: dropIn 0.15s var(--transition); }
+.dropdown-item {
+  display: block; padding: 9px 16px; font-size: 0.68rem;
+  letter-spacing: 0.1em; color: var(--text-dim); text-decoration: none;
+  text-transform: lowercase; transition: background 0.15s, color 0.15s;
+}
+.dropdown-item:hover, .dropdown-item.active { background: var(--bg3); color: var(--text-bright); }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+  
+/* ── Page animations ─────────────────────────────────────── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+.anim-1 { animation: fadeUp 0.5s 0.05s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-2 { animation: fadeUp 0.5s 0.12s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-3 { animation: fadeUp 0.5s 0.19s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-4 { animation: fadeUp 0.5s 0.26s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-5 { animation: fadeUp 0.5s 0.33s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-fade { animation: fadeIn 0.5s 0.05s both; }
+
+  
+/* ── Custom cursor ───────────────────────────────────────── */
+*, *::before, *::after { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23F85050" stroke="%23000000" stroke-width="2" d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z"></path></svg>') 0 0, auto !important; }
+
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <nav class="topbar">
+    <a href="index.html" class="logo">vanta<span class="accent">black</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">home</a>
+      <a href="games.html" class="nav-link">games</a>
+      <a href="music.html" class="nav-link">music</a>
+      <a href="proxy.html" class="nav-link">proxy</a>
+      <a href="ai.html" class="nav-link">AI</a>
+      <a href="index.html" class="nav-link">settings</a>
+      <div class="nav-dropdown">
+        <button class="dropdown-toggle active" id="moreBtn">more ▾</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+        <a href="about.html" class="dropdown-item">about</a>
+        <a href="changelog.html" class="dropdown-item active">changelog</a>
+        <a href="themes.html" class="dropdown-item">themes</a>
+        <a href="bookmarks.html" class="dropdown-item">bookmarks</a>
+        <a href="partners.html" class="dropdown-item">partners</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <div class="page-title">change<span>log</span></div>
+      <div class="page-sub">what's new in vantablack</div>
+    </div>
+
+    <div class="timeline">
+
+      <div class="release latest">
+        <div class="release-header">
+          <span class="release-ver">v1.0.0</span>
+          <span class="release-date">March 2026</span>
+          <span class="release-badge badge-latest">latest</span>
+          <span class="release-badge badge-major">major</span>
+        </div>
+        <ul class="changes">
+          <li class="change"><span class="change-type type-new">new</span>Initial release of vantablack</li>
+          <li class="change"><span class="change-type type-new">new</span>Built-in HTTP proxy with server-side request routing</li>
+          <li class="change"><span class="change-type type-new">new</span>Games library with 150+ titles from 3kh0 assets</li>
+          <li class="change"><span class="change-type type-new">new</span>Extra games: UNDERTALE Yellow and Deltarune via Ultimate Game Stash</li>
+          <li class="change"><span class="change-type type-new">new</span>Spotify music player with curated playlists and custom URL support</li>
+          <li class="change"><span class="change-type type-new">new</span>Bookmarks page with localStorage persistence</li>
+          <li class="change"><span class="change-type type-new">new</span>Themes page with 6 color schemes</li>
+          <li class="change"><span class="change-type type-new">new</span>Settings modal: appearance, browsing, privacy, credits</li>
+          <li class="change"><span class="change-type type-new">new</span>Tab cloaking with Google, Drive, Classroom, Outlook presets</li>
+          <li class="change"><span class="change-type type-new">new</span>Brave Search integration (no captchas)</li>
+          <li class="change"><span class="change-type type-new">new</span>About, Changelog, Partners pages</li>
+          <li class="change"><span class="change-type type-new">new</span>Custom 404 error page</li>
+          <li class="change"><span class="change-type type-new">new</span>Noise overlay, scanlines, and animation toggles</li>
+          <li class="change"><span class="change-type type-new">new</span>XOR-encoded proxy URLs for obfuscation</li>
+          <li class="change"><span class="change-type type-improve">improve</span>Full browser-like headers on proxy requests to avoid bot detection</li>
+          <li class="change"><span class="change-type type-fix">fix</span>Proxy routing conflict between /proxy and /proxy.html</li>
+          <li class="change"><span class="change-type type-fix">fix</span>Gzip/brotli decompression for proxied content</li>
+          <li class="change"><span class="change-type type-fix">fix</span>Duplicate URL bar caused by iframe sandbox allow-same-origin</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    try{const s=JSON.parse(localStorage.getItem('vanta_settings')||'{}');if(s.theme)document.documentElement.setAttribute('data-theme',s.theme);}catch{}
+    const btn=document.getElementById('moreBtn');const menu=document.getElementById('dropdownMenu');
+    if(btn&&menu){btn.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open');});document.addEventListener('click',()=>menu.classList.remove('open'));}
+  
+
+  </script>
+
+  <script>
+  document.querySelectorAll('.page-header').forEach(el => el.classList.add('anim-1'));
+  document.querySelectorAll('.timeline').forEach(el => el.classList.add('anim-2'));
+  </script>
+</body>
+</html>

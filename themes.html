@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>vantablack — themes</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
+    :root{--bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--border:#222;--border-bright:#333;--text:#c8c8c8;--text-dim:#555;--text-bright:#e8e8e8;--accent:#e63946;--accent2:#ff6b6b;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--transition:cubic-bezier(0.23,1,0.32,1);}
+    [data-theme="cyan"]{--accent:#00d4ff;--accent2:#7fffff;}
+    [data-theme="mono"]{--accent:#aaaaaa;--accent2:#cccccc;}
+    [data-theme="green"]{--accent:#39e67a;--accent2:#6bffaa;}
+    [data-theme="purple"]{--accent:#a855f7;--accent2:#c084fc;}
+    [data-theme="orange"]{--accent:#f97316;--accent2:#fb923c;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-mono);}
+    .noise{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+    .topbar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:rgba(8,8,8,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:200;}
+    .logo{font-family:var(--font-display);font-weight:800;font-size:1rem;letter-spacing:0.1em;color:var(--text-bright);text-decoration:none;}
+    .logo .accent{color:var(--accent);}
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-link{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:color 0.2s;cursor:pointer;background:none;border:none;padding:0;font-family:var(--font-mono);}
+    .nav-link:hover,.nav-link.active{color:var(--text-bright);}
+    .nav-dropdown{position:relative;}
+    .dropdown-toggle{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);background:none;border:none;cursor:pointer;font-family:var(--font-mono);padding:0;transition:color 0.2s;}
+    .dropdown-toggle:hover,.dropdown-toggle.active{color:var(--text-bright);}
+    .dropdown-menu{display:none;position:absolute;top:calc(100% + 10px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:4px;min-width:140px;overflow:hidden;z-index:300;}
+    .dropdown-menu.open{display:block;}
+    .dropdown-item{display:block;padding:9px 16px;font-size:0.68rem;letter-spacing:0.1em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:background 0.15s,color 0.15s;}
+    .dropdown-item:hover,.dropdown-item.active{background:var(--bg3);color:var(--text-bright);}
+    .page{padding:90px 32px 80px;max-width:900px;margin:0 auto;}
+    .page-header{margin-bottom:40px;animation:fadeUp 0.5s var(--transition) both;}
+    .page-title{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--text-bright);letter-spacing:0.05em;margin-bottom:8px;}
+    .page-title span{color:var(--accent);}
+    .page-sub{font-size:0.62rem;letter-spacing:0.25em;color:var(--text-dim);text-transform:uppercase;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+    .themes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;animation:fadeUp 0.5s 0.08s var(--transition) both;}
+
+    .theme-card{
+      background:var(--bg2);border:2px solid var(--border);border-radius:8px;
+      overflow:hidden;cursor:pointer;transition:transform 0.2s var(--transition),border-color 0.2s,box-shadow 0.2s;
+      position:relative;
+    }
+    .theme-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+    .theme-card.active{border-color:var(--accent);}
+    .theme-card.active::after{
+      content:'✓ active';position:absolute;top:10px;right:10px;
+      font-size:0.55rem;letter-spacing:0.12em;padding:3px 8px;
+      background:var(--accent);color:#fff;border-radius:2px;font-weight:700;
+    }
+
+    .theme-preview{
+      height:100px;padding:14px;display:flex;flex-direction:column;gap:6px;
+      position:relative;overflow:hidden;
+    }
+    .preview-bar{height:8px;border-radius:4px;opacity:0.9;}
+    .preview-bar.wide{width:65%;}
+    .preview-bar.medium{width:40%;}
+    .preview-bar.narrow{width:25%;}
+    .preview-accent{background:var(--accent);}
+    .preview-dim{background:var(--border-bright);}
+    .preview-circle{
+      position:absolute;right:14px;top:50%;transform:translateY(-50%);
+      width:36px;height:36px;border-radius:50%;border:2px solid;
+      display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;
+    }
+
+    .theme-info{padding:14px 16px;border-top:1px solid var(--border);}
+    .theme-name{font-family:var(--font-display);font-size:0.95rem;font-weight:700;color:var(--text-bright);margin-bottom:4px;}
+    .theme-desc{font-size:0.62rem;color:var(--text-dim);letter-spacing:0.05em;line-height:1.5;}
+
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  
+.nav-dropdown { position: relative; }
+.dropdown-toggle {
+  font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-dim);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); padding: 0; transition: color 0.2s;
+  text-transform: lowercase;
+}
+.dropdown-toggle:hover, .dropdown-toggle.active { color: var(--text-bright); }
+.dropdown-menu {
+  display: none; position: absolute; top: calc(100% + 10px); right: 0;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 4px;
+  min-width: 140px; overflow: hidden; z-index: 300;
+}
+.dropdown-menu.open { display: block; animation: dropIn 0.15s var(--transition); }
+.dropdown-item {
+  display: block; padding: 9px 16px; font-size: 0.68rem;
+  letter-spacing: 0.1em; color: var(--text-dim); text-decoration: none;
+  text-transform: lowercase; transition: background 0.15s, color 0.15s;
+}
+.dropdown-item:hover, .dropdown-item.active { background: var(--bg3); color: var(--text-bright); }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+  
+/* ── Page animations ─────────────────────────────────────── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+.anim-1 { animation: fadeUp 0.5s 0.05s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-2 { animation: fadeUp 0.5s 0.12s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-3 { animation: fadeUp 0.5s 0.19s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-4 { animation: fadeUp 0.5s 0.26s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-5 { animation: fadeUp 0.5s 0.33s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-fade { animation: fadeIn 0.5s 0.05s both; }
+
+  
+/* ── Custom cursor ───────────────────────────────────────── */
+*, *::before, *::after { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23F85050" stroke="%23000000" stroke-width="2" d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z"></path></svg>') 0 0, auto !important; }
+
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <nav class="topbar">
+    <a href="index.html" class="logo">vanta<span class="accent">black</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">home</a>
+      <a href="games.html" class="nav-link">games</a>
+      <a href="music.html" class="nav-link">music</a>
+      <a href="proxy.html" class="nav-link">proxy</a>
+      <a href="ai.html" class="nav-link">AI</a>
+      <a href="index.html" class="nav-link">settings</a>
+      <div class="nav-dropdown">
+        <button class="dropdown-toggle active" id="moreBtn">more ▾</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+        <a href="about.html" class="dropdown-item">about</a>
+        <a href="changelog.html" class="dropdown-item">changelog</a>
+        <a href="themes.html" class="dropdown-item active">themes</a>
+        <a href="bookmarks.html" class="dropdown-item">bookmarks</a>
+        <a href="partners.html" class="dropdown-item">partners</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <div class="page-title">the<span>mes</span></div>
+      <div class="page-sub">click a theme to apply it instantly</div>
+    </div>
+
+    <div class="themes-grid" id="themesGrid"></div>
+  </div>
+
+  <script>
+    const THEMES = [
+      { id:'dark',   name:'Vantablack',  desc:'The original. Deep black with blood red accents.',      accent:'#e63946', bg:'#080808' },
+      { id:'cyan',   name:'Void Cyan',   desc:'Ice-cold cyan cuts through absolute darkness.',          accent:'#00d4ff', bg:'#080808' },
+      { id:'purple', name:'Ultraviolet', desc:'Deep purple — just beyond the visible spectrum.',         accent:'#a855f7', bg:'#080808' },
+      { id:'green',  name:'Phosphor',    desc:'Classic terminal green on pure black.',                   accent:'#39e67a', bg:'#080808' },
+      { id:'orange', name:'Ember',       desc:'Warm orange embers glowing against the void.',            accent:'#f97316', bg:'#080808' },
+      { id:'mono',   name:'Monochrome',  desc:'No color. Pure contrast. Maximum focus.',                 accent:'#aaaaaa', bg:'#080808' },
+    ];
+
+    function getTheme() {
+      try{ return JSON.parse(localStorage.getItem('vanta_settings')||'{}').theme || 'dark'; }catch{ return 'dark'; }
+    }
+
+    function setTheme(id) {
+      try{
+        const s = JSON.parse(localStorage.getItem('vanta_settings')||'{}');
+        s.theme = id;
+        localStorage.setItem('vanta_settings', JSON.stringify(s));
+      }catch{}
+      document.documentElement.setAttribute('data-theme', id);
+      document.querySelectorAll('.theme-card').forEach(c => {
+        c.classList.toggle('active', c.dataset.theme === id);
+      });
+    }
+
+    // Apply current theme
+    const current = getTheme();
+    document.documentElement.setAttribute('data-theme', current);
+
+    // Render cards
+    const grid = document.getElementById('themesGrid');
+    THEMES.forEach((t, i) => {
+      const card = document.createElement('div');
+      card.className = 'theme-card' + (t.id === current ? ' active' : '');
+      card.dataset.theme = t.id;
+      card.style.animationDelay = (i * 0.05) + 's';
+      card.style.animation = `fadeUp 0.4s ${i*0.05}s var(--transition) both`;
+      card.innerHTML = `
+        <div class="theme-preview" style="background:#080808">
+          <div class="preview-bar preview-dim wide"></div>
+          <div class="preview-bar wide" style="background:${t.accent};width:55%;height:8px;border-radius:4px;opacity:0.9;"></div>
+          <div class="preview-bar preview-dim medium"></div>
+          <div class="preview-circle" style="border-color:${t.accent};color:${t.accent}">◈</div>
+        </div>
+        <div class="theme-info">
+          <div class="theme-name">${t.name}</div>
+          <div class="theme-desc">${t.desc}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => setTheme(t.id));
+      grid.appendChild(card);
+    });
+
+    // Dropdown
+    const btn=document.getElementById('moreBtn');const menu=document.getElementById('dropdownMenu');
+    if(btn&&menu){btn.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open');});document.addEventListener('click',()=>menu.classList.remove('open'));}
+  
+
+  </script>
+
+  <script>
+  document.querySelectorAll('.page-header').forEach(el => el.classList.add('anim-1'));
+  document.querySelectorAll('.themes-grid').forEach(el => el.classList.add('anim-2'));
+  </script>
+</body>
+</html>

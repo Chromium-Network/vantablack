@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>vantablack — 404</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
+    :root{--bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--border:#222;--text:#c8c8c8;--text-dim:#555;--text-bright:#e8e8e8;--accent:#e63946;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--transition:cubic-bezier(0.23,1,0.32,1);}
+    [data-theme="cyan"]{--accent:#00d4ff;}[data-theme="mono"]{--accent:#aaaaaa;}[data-theme="green"]{--accent:#39e67a;}[data-theme="purple"]{--accent:#a855f7;}[data-theme="orange"]{--accent:#f97316;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-mono);display:flex;flex-direction:column;}
+    .noise{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+    .topbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:rgba(8,8,8,0.92);border-bottom:1px solid var(--border);flex-shrink:0;}
+    .logo{font-family:var(--font-display);font-weight:800;font-size:1rem;letter-spacing:0.1em;color:var(--text-bright);text-decoration:none;}
+    .logo .accent{color:var(--accent);}
+    .nav-link{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:color 0.2s;}
+    .nav-link:hover{color:var(--text-bright);}
+
+    .main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;}
+
+    .glitch-wrap{position:relative;margin-bottom:24px;}
+    .num{
+      font-family:var(--font-display);font-size:clamp(6rem,20vw,14rem);font-weight:800;
+      color:transparent;-webkit-text-stroke:2px rgba(230,57,70,0.3);
+      line-height:1;user-select:none;position:relative;
+      animation:glitch 4s infinite;
+    }
+    .num::before,.num::after{
+      content:'404';position:absolute;inset:0;
+      font-family:var(--font-display);font-size:inherit;font-weight:800;
+      -webkit-text-stroke:0;
+    }
+    .num::before{color:rgba(0,212,255,0.15);animation:glitchA 4s infinite;clip-path:polygon(0 0,100% 0,100% 40%,0 40%);}
+    .num::after{color:rgba(230,57,70,0.15);animation:glitchB 4s infinite;clip-path:polygon(0 60%,100% 60%,100% 100%,0 100%);}
+
+    @keyframes glitch{0%,90%,100%{transform:translate(0);}92%{transform:translate(-3px,1px);}94%{transform:translate(3px,-1px);}96%{transform:translate(-2px,2px);}}
+    @keyframes glitchA{0%,90%,100%{transform:translate(0);}92%{transform:translate(4px,-1px);}94%{transform:translate(-4px,1px);}96%{transform:translate(2px,-2px);}}
+    @keyframes glitchB{0%,90%,100%{transform:translate(0);}92%{transform:translate(-4px,2px);}94%{transform:translate(4px,-2px);}96%{transform:translate(-2px,1px);}}
+
+    .error-msg{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--text-bright);margin-bottom:10px;letter-spacing:0.05em;}
+    .error-sub{font-size:0.65rem;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:36px;}
+
+    .error-path{
+      font-size:0.7rem;color:var(--text-dim);background:var(--bg2);
+      border:1px solid var(--border);border-radius:4px;padding:8px 16px;
+      margin-bottom:32px;max-width:400px;word-break:break-all;line-height:1.6;
+    }
+    .error-path span{color:var(--accent);}
+
+    .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+    .action-btn{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 20px;
+      border-radius:4px;font-family:var(--font-mono);font-size:0.7rem;
+      letter-spacing:0.08em;text-decoration:none;cursor:pointer;border:none;
+      transition:all 0.2s;font-weight:700;
+    }
+    .action-primary{background:var(--accent);color:#fff;}
+    .action-primary:hover{opacity:0.85;}
+    .action-secondary{background:var(--bg2);color:var(--text-dim);border:1px solid var(--border);}
+    .action-secondary:hover{border-color:var(--border-bright);color:var(--text-bright);}
+
+    /* Countdown */
+    .countdown{margin-top:28px;font-size:0.58rem;letter-spacing:0.18em;color:var(--text-dim);text-transform:uppercase;}
+    .countdown span{color:var(--accent);}
+  
+/* ── Custom cursor ───────────────────────────────────────── */
+*, *::before, *::after { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23F85050" stroke="%23000000" stroke-width="2" d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z"></path></svg>') 0 0, auto !important; }
+
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <nav class="topbar">
+    <a href="index.html" class="logo">vanta<span class="accent">black</span></a>
+    <a href="index.html" class="nav-link">← back to home</a>
+  </nav>
+
+  <div class="main">
+    <div class="glitch-wrap">
+      <div class="num">404</div>
+    </div>
+    <div class="error-msg">page not found</div>
+    <div class="error-sub">the void swallowed it</div>
+    <div class="error-path" id="errorPath">
+      requested: <span id="pathDisplay">—</span>
+    </div>
+    <div class="actions">
+      <a href="index.html" class="action-btn action-primary">⌂ go home</a>
+      <a href="javascript:history.back()" class="action-btn action-secondary">← go back</a>
+      <a href="proxy.html" class="action-btn action-secondary">↗ open proxy</a>
+    </div>
+    <div class="countdown">redirecting in <span id="timer">10</span>s</div>
+  </div>
+
+  <script>
+    try{const s=JSON.parse(localStorage.getItem('vanta_settings')||'{}');if(s.theme)document.documentElement.setAttribute('data-theme',s.theme);}catch{}
+
+    // Show the path that 404'd
+    const path = window.location.pathname;
+    document.getElementById('pathDisplay').textContent = path;
+
+    // Countdown redirect
+    let t = 10;
+    const timerEl = document.getElementById('timer');
+    const interval = setInterval(() => {
+      t--;
+      timerEl.textContent = t;
+      if (t <= 0) { clearInterval(interval); window.location.href = 'index.html'; }
+    }, 1000);
+  </script>
+</body>
+</html>

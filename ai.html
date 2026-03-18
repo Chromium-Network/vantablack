@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>vantablack — AI</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
+    :root{--bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--border:#222;--border-bright:#333;--text:#c8c8c8;--text-dim:#555;--text-bright:#e8e8e8;--accent:#e63946;--accent2:#ff6b6b;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--transition:cubic-bezier(0.23,1,0.32,1);}
+    [data-theme="cyan"]{--accent:#00d4ff;--accent2:#7fffff;}[data-theme="mono"]{--accent:#aaaaaa;--accent2:#cccccc;}[data-theme="green"]{--accent:#39e67a;--accent2:#6bffaa;}[data-theme="purple"]{--accent:#a855f7;--accent2:#c084fc;}[data-theme="orange"]{--accent:#f97316;--accent2:#fb923c;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-mono);overflow:hidden;}
+    .noise{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+    .topbar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:rgba(8,8,8,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:200;}
+    .logo{font-family:var(--font-display);font-weight:800;font-size:1rem;letter-spacing:0.1em;color:var(--text-bright);text-decoration:none;}
+    .logo .accent{color:var(--accent);}
+    .nav-links{display:flex;align-items:center;gap:20px;}
+    .nav-link{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:color 0.2s;cursor:pointer;background:none;border:none;padding:0;font-family:var(--font-mono);}
+    .nav-link:hover,.nav-link.active{color:var(--text-bright);}
+    .nav-dropdown{position:relative;}
+    .dropdown-toggle{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);background:none;border:none;cursor:pointer;font-family:var(--font-mono);padding:0;transition:color 0.2s;text-transform:lowercase;}
+    .dropdown-toggle:hover{color:var(--text-bright);}
+    .dropdown-menu{display:none;position:absolute;top:calc(100% + 10px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:4px;min-width:140px;overflow:hidden;z-index:300;}
+    .dropdown-menu.open{display:block;animation:dropIn 0.15s var(--transition);}
+    .dropdown-item{display:block;padding:9px 16px;font-size:0.68rem;letter-spacing:0.1em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:background 0.15s,color 0.15s;}
+    .dropdown-item:hover,.dropdown-item.active{background:var(--bg3);color:var(--text-bright);}
+    @keyframes dropIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+
+    .layout{position:fixed;top:52px;left:0;right:0;bottom:0;display:flex;}
+
+    /* Sidebar */
+    .sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+    .sidebar-header{padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .sidebar-title{font-family:var(--font-display);font-size:0.9rem;font-weight:700;color:var(--text-bright);margin-bottom:4px;}
+    .sidebar-sub{font-size:0.58rem;letter-spacing:0.18em;color:var(--text-dim);text-transform:uppercase;}
+    .new-chat-btn{margin:12px 12px 0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:9px 14px;cursor:pointer;color:var(--text-dim);font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.08em;transition:all 0.15s;width:calc(100% - 24px);}
+    .new-chat-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .chat-history{flex:1;overflow-y:auto;padding:8px;}
+    .history-label{font-size:0.55rem;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;padding:8px 8px 4px;}
+    .history-item{padding:7px 8px;border-radius:3px;cursor:pointer;font-size:0.68rem;color:var(--text-dim);transition:background 0.15s,color 0.15s;display:flex;align-items:center;gap:7px;position:relative;}
+    .history-item:hover{background:var(--bg3);color:var(--text);}
+    .history-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;opacity:0.6;}
+    .history-title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+    .history-actions{display:none;gap:2px;flex-shrink:0;}
+    .history-item:hover .history-actions{display:flex;}
+    .hist-btn{width:20px;height:20px;background:none;border:none;border-radius:2px;cursor:pointer;font-size:0.65rem;color:var(--text-dim);display:flex;align-items:center;justify-content:center;transition:all 0.15s;padding:0;}
+    .hist-btn:hover{background:var(--bg2);color:var(--text-bright);}
+    .hist-btn.delete:hover{color:var(--accent);}
+    .rename-input{flex:1;background:var(--bg);border:1px solid var(--border-bright);border-radius:3px;padding:2px 6px;color:var(--text-bright);font-family:var(--font-mono);font-size:0.68rem;outline:none;min-width:0;}
+    .model-row{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px;}
+    .model-label{font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);text-transform:uppercase;flex-shrink:0;}
+    .model-select{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font-mono);font-size:0.62rem;padding:4px 6px;outline:none;cursor:pointer;}
+
+    /* Chat */
+    .chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    .messages{flex:1;overflow-y:auto;padding:24px 0;display:flex;flex-direction:column;}
+    .msg{display:flex;gap:14px;padding:14px 28px;transition:background 0.15s;}
+    .msg:hover{background:rgba(255,255,255,0.012);}
+    .msg-avatar{width:30px;height:30px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:2px;}
+    .msg.user .msg-avatar{background:rgba(230,57,70,0.12);border:1px solid rgba(230,57,70,0.2);color:var(--accent);}
+    .msg.assistant .msg-avatar{background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);}
+    .msg-content{flex:1;min-width:0;}
+    .msg-role{font-size:0.57rem;letter-spacing:0.18em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;}
+    .msg.user .msg-role{color:rgba(230,57,70,0.6);}
+    .msg-text{font-size:0.8rem;line-height:1.85;color:var(--text);word-break:break-word;}
+    .msg.assistant .msg-text{color:var(--text-bright);}
+    .msg-text strong{color:var(--text-bright);}
+    .msg-text code{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:0.74rem;color:var(--accent2);}
+    .msg-text pre{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px;margin:10px 0;overflow-x:auto;}
+    .msg-text pre code{background:none;border:none;padding:0;color:var(--text-bright);}
+    .typing{display:flex;align-items:center;gap:5px;padding:4px 0;}
+    .typing-dot{width:6px;height:6px;border-radius:50%;background:var(--text-dim);animation:typingBounce 1.2s infinite;}
+    .typing-dot:nth-child(2){animation-delay:0.2s;}.typing-dot:nth-child(3){animation-delay:0.4s;}
+    @keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:0.3;}30%{transform:translateY(-5px);opacity:1;}}
+
+    /* Welcome */
+    .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:40px;text-align:center;}
+    .welcome-icon{font-size:2.5rem;opacity:0.12;animation:breathe 3s ease infinite;}
+    @keyframes breathe{0%,100%{opacity:0.08;}50%{opacity:0.18;}}
+    .welcome-title{font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text-bright);letter-spacing:0.05em;}
+    .welcome-badge{font-size:0.55rem;letter-spacing:0.15em;color:#4285f4;background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.2);border-radius:2px;padding:3px 8px;text-transform:uppercase;}
+    .welcome-sub{font-size:0.68rem;color:var(--text-dim);line-height:1.7;max-width:360px;}
+    .suggestion-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:460px;width:100%;margin-top:4px;}
+    .suggestion{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:11px 14px;cursor:pointer;text-align:left;font-family:var(--font-mono);font-size:0.67rem;color:var(--text-dim);transition:all 0.15s;line-height:1.5;}
+    .suggestion:hover{border-color:var(--accent);color:var(--text);background:var(--bg3);}
+
+    /* Input */
+    .input-area{border-top:1px solid var(--border);padding:14px 24px;background:var(--bg);flex-shrink:0;}
+    .input-wrap{display:flex;gap:10px;align-items:flex-end;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;transition:border-color 0.2s;}
+    .input-wrap:focus-within{border-color:var(--border-bright);}
+    .chat-input{flex:1;background:transparent;border:none;outline:none;color:var(--text-bright);font-family:var(--font-mono);font-size:0.8rem;line-height:1.6;resize:none;max-height:140px;min-height:24px;}
+    .chat-input::placeholder{color:var(--text-dim);}
+    .send-btn{width:34px;height:34px;background:var(--accent);border:none;border-radius:4px;color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;flex-shrink:0;}
+    .send-btn:hover{opacity:0.85;}.send-btn:disabled{opacity:0.25;cursor:not-allowed;}
+    .input-meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+    .input-hint{font-size:0.57rem;letter-spacing:0.1em;color:var(--text-dim);}
+    .clear-btn{font-size:0.57rem;letter-spacing:0.1em;color:var(--text-dim);background:none;border:none;cursor:pointer;font-family:var(--font-mono);transition:color 0.15s;}
+    .clear-btn:hover{color:var(--accent);}
+
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    .hidden{display:none!important;}
+  
+/* ── Page animations ─────────────────────────────────────── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+.anim-1 { animation: fadeUp 0.5s 0.05s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-2 { animation: fadeUp 0.5s 0.12s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-3 { animation: fadeUp 0.5s 0.19s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-4 { animation: fadeUp 0.5s 0.26s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-5 { animation: fadeUp 0.5s 0.33s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-fade { animation: fadeIn 0.5s 0.05s both; }
+
+  
+/* ── Custom cursor ───────────────────────────────────────── */
+*, *::before, *::after { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23F85050" stroke="%23000000" stroke-width="2" d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z"></path></svg>') 0 0, auto !important; }
+
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <nav class="topbar">
+    <a href="index.html" class="logo">vanta<span class="accent">black</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">home</a>
+      <a href="games.html" class="nav-link">games</a>
+      <a href="music.html" class="nav-link">music</a>
+      <a href="proxy.html" class="nav-link">proxy</a>
+      <a href="ai.html" class="nav-link active">AI</a>
+      <a href="index.html" class="nav-link">settings</a>
+      <div class="nav-dropdown">
+        <button class="dropdown-toggle" id="moreBtn">more ▾</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <a href="about.html" class="dropdown-item">about</a>
+          <a href="changelog.html" class="dropdown-item">changelog</a>
+          <a href="themes.html" class="dropdown-item">themes</a>
+          <a href="bookmarks.html" class="dropdown-item">bookmarks</a>
+          <a href="partners.html" class="dropdown-item">partners</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">AI chat</div>
+        <div class="sidebar-sub">powered by Pollinations AI</div>
+      </div>
+      <button class="new-chat-btn" id="newChatBtn">✦ new chat</button>
+      <div class="chat-history" id="chatHistory">
+        <div class="history-label">recent</div>
+      </div>
+      <div class="model-row">
+        <span class="model-label">model</span>
+        <select class="model-select" id="modelSelect">
+          <option value="openai" selected>GPT-4o (OpenAI)</option>
+          <option value="mistral">Mistral</option>
+          <option value="claude-hybridspace">Claude (Hybrid)</option>
+          <option value="llama">Llama 3</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="chat-main">
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <div class="welcome-icon">◈</div>
+          <div class="welcome-badge">Pollinations AI — No Key Required</div>
+          <div class="welcome-title">vantablack AI</div>
+          <div class="welcome-sub">Free AI in the void. Ask anything — code, questions, writing, whatever.</div>
+          <div class="suggestion-grid">
+            <div class="suggestion" data-prompt="Explain how web proxies work and why schools block sites">How do proxies work?</div>
+            <div class="suggestion" data-prompt="Write a short dark poem about the internet and anonymity">Write a dark poem</div>
+            <div class="suggestion" data-prompt="What are the best tips for staying anonymous online?">Anonymity tips</div>
+            <div class="suggestion" data-prompt="Help me debug my JavaScript — I'll paste my code">Debug my JS</div>
+          </div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-wrap">
+          <textarea class="chat-input" id="chatInput" placeholder="message vantablack AI..." rows="1"></textarea>
+          <button class="send-btn" id="sendBtn">↑</button>
+        </div>
+        <div class="input-meta">
+          <span class="input-hint">enter to send · shift+enter for new line</span>
+          <button class="clear-btn" id="clearBtn">↺ clear chat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    try{const s=JSON.parse(localStorage.getItem('vanta_settings')||'{}');if(s.theme)document.documentElement.setAttribute('data-theme',s.theme);}catch{}
+
+    let messages = [], sessions = [], isLoading = false;
+    try{sessions=JSON.parse(localStorage.getItem('vanta_ai_sessions')||'[]');}catch{}
+
+    const messagesEl = document.getElementById('messages');
+    const welcomeEl  = document.getElementById('welcome');
+    const chatInput  = document.getElementById('chatInput');
+    const sendBtn    = document.getElementById('sendBtn');
+    const clearBtn   = document.getElementById('clearBtn');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const modelSelect= document.getElementById('modelSelect');
+    const historyEl  = document.getElementById('chatHistory');
+
+    function format(text) {
+      text = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      text = text.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,l,c)=>`<pre><code>${c.trim()}</code></pre>`);
+      text = text.replace(/`([^`\n]+)`/g,'<code>$1</code>');
+      text = text.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+      text = text.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+      text = text.replace(/\n/g,'<br>');
+      return text;
+    }
+
+    function addBubble(role, content) {
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.innerHTML = `
+        <div class="msg-avatar">${role==='user'?'U':'★'}</div>
+        <div class="msg-content">
+          <div class="msg-role">${role==='user'?'you':'AI'}</div>
+          <div class="msg-text">${format(content)}</div>
+        </div>`;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return div;
+    }
+
+    function showTyping() {
+      const d = document.createElement('div');
+      d.className='msg assistant'; d.id='typingEl';
+      d.innerHTML=`<div class="msg-avatar">G</div><div class="msg-content"><div class="msg-role">AI</div><div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+      messagesEl.appendChild(d); messagesEl.scrollTop=messagesEl.scrollHeight;
+    }
+    function removeTyping(){document.getElementById('typingEl')?.remove();}
+
+    async function send(userText) {
+      userText = userText.trim();
+      if (!userText || isLoading) return;
+
+      welcomeEl.classList.add('hidden');
+      messages.push({role:'user', content:userText});
+      addBubble('user', userText);
+      chatInput.value=''; chatInput.style.height='auto';
+      isLoading=true; sendBtn.disabled=true;
+      showTyping();
+
+      try {
+        const res = await fetch('/ai/chat', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            model: modelSelect.value,
+            messages: [
+              { role: 'system', content: 'You are vantablack AI — a sharp, minimal, knowledgeable assistant built into the vantablack proxy platform. Be helpful, direct, and concise. You have a slightly dark and edgy personality. Do not use excessive disclaimers.' },
+              ...messages
+            ]
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+
+        const reply = data.choices?.[0]?.message?.content || '(no response)';
+        messages.push({role:'assistant', content: reply});
+        removeTyping();
+        addBubble('assistant', reply);
+        saveSession(userText);
+
+      } catch(err) {
+        removeTyping();
+        const d = document.createElement('div');
+        d.className='msg assistant';
+        d.innerHTML=`<div class="msg-avatar" style="color:var(--accent)">!</div><div class="msg-content"><div class="msg-role" style="color:var(--accent)">error</div><div class="msg-text" style="color:var(--accent);opacity:0.75">${err.message}</div></div>`;
+        messagesEl.appendChild(d); messagesEl.scrollTop=messagesEl.scrollHeight;
+      } finally {
+        isLoading=false; sendBtn.disabled=false; chatInput.focus();
+      }
+    }
+
+    let currentSessionId = null;
+
+    function saveSession(firstMsg) {
+      if (!currentSessionId) {
+        // First message — create a new session
+        currentSessionId = Date.now();
+        const title = firstMsg.slice(0,42)+(firstMsg.length>42?'…':'');
+        sessions.unshift({id:currentSessionId, title, messages:JSON.parse(JSON.stringify(messages))});
+      } else {
+        // Subsequent messages — update existing session
+        const idx = sessions.findIndex(s => s.id === currentSessionId);
+        if (idx !== -1) sessions[idx].messages = JSON.parse(JSON.stringify(messages));
+      }
+      sessions = sessions.slice(0,20);
+      persistSessions();
+      renderHistory();
+    }
+
+    function persistSessions() {
+      try{localStorage.setItem('vanta_ai_sessions',JSON.stringify(sessions));}catch{}
+    }
+
+    function renderHistory() {
+      historyEl.innerHTML='<div class="history-label">recent</div>';
+      sessions.slice(0,12).forEach(s=>{
+        const item=document.createElement('div');
+        item.className='history-item';
+        if(s.id===currentSessionId) item.style.background='var(--bg3)';
+
+        item.innerHTML=`
+          <div class="history-dot"></div>
+          <div class="history-title">${s.title}</div>
+          <div class="history-actions">
+            <button class="hist-btn rename-btn" title="Rename">✎</button>
+            <button class="hist-btn delete delete-btn" title="Delete">✕</button>
+          </div>`;
+
+        // Load chat on click (but not on button clicks)
+        item.addEventListener('click', e => {
+          if(e.target.closest('.history-actions')) return;
+          messages=JSON.parse(JSON.stringify(s.messages));
+          currentSessionId=s.id;
+          Array.from(messagesEl.children).forEach(c=>{if(c!==welcomeEl)c.remove();});
+          welcomeEl.classList.add('hidden');
+          s.messages.forEach(m=>addBubble(m.role==='assistant'?'assistant':'user', m.content));
+          renderHistory();
+        });
+
+        // Rename
+        item.querySelector('.rename-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          const titleEl = item.querySelector('.history-title');
+          const actionsEl = item.querySelector('.history-actions');
+          const input = document.createElement('input');
+          input.className='rename-input';
+          input.value=s.title;
+          titleEl.replaceWith(input);
+          actionsEl.style.display='none';
+          input.focus();
+          input.select();
+          function finishRename() {
+            const newTitle = input.value.trim() || s.title;
+            const idx = sessions.findIndex(x=>x.id===s.id);
+            if(idx!==-1){ sessions[idx].title=newTitle; s.title=newTitle; }
+            persistSessions();
+            renderHistory();
+          }
+          input.addEventListener('keydown', e => {
+            if(e.key==='Enter') finishRename();
+            if(e.key==='Escape') renderHistory();
+          });
+          input.addEventListener('blur', finishRename);
+        });
+
+        // Delete
+        item.querySelector('.delete-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          sessions=sessions.filter(x=>x.id!==s.id);
+          if(currentSessionId===s.id){
+            currentSessionId=null; messages=[];
+            Array.from(messagesEl.children).forEach(c=>{if(c!==welcomeEl)c.remove();});
+            welcomeEl.classList.remove('hidden');
+          }
+          persistSessions();
+          renderHistory();
+        });
+
+        historyEl.appendChild(item);
+      });
+    }
+    renderHistory();
+
+    newChatBtn.addEventListener('click',()=>{
+      messages=[];
+      currentSessionId=null;
+      Array.from(messagesEl.children).forEach(c=>{if(c!==welcomeEl)c.remove();});
+      welcomeEl.classList.remove('hidden'); chatInput.focus();
+    });
+    clearBtn.addEventListener('click',()=>{
+      if(!messages.length)return;
+      if(confirm('Clear this conversation?')){
+        messages=[];
+        currentSessionId=null;
+        Array.from(messagesEl.children).forEach(c=>{if(c!==welcomeEl)c.remove();});
+        welcomeEl.classList.remove('hidden');
+      }
+    });
+    chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(chatInput.value);}});
+    chatInput.addEventListener('input',()=>{chatInput.style.height='auto';chatInput.style.height=Math.min(chatInput.scrollHeight,140)+'px';});
+    sendBtn.addEventListener('click',()=>send(chatInput.value));
+    document.querySelectorAll('.suggestion').forEach(s=>s.addEventListener('click',()=>send(s.dataset.prompt)));
+
+    const _mBtn=document.getElementById('moreBtn'),_mMenu=document.getElementById('dropdownMenu');
+    if(_mBtn&&_mMenu){_mBtn.addEventListener('click',e=>{e.stopPropagation();_mMenu.classList.toggle('open');});document.addEventListener('click',()=>_mMenu.classList.remove('open'));}
+  </script>
+
+  <script>
+  document.querySelectorAll('.sidebar').forEach(el => el.classList.add('anim-fade'));
+  document.querySelectorAll('.chat-main').forEach(el => el.classList.add('anim-fade'));
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "vantablack",
+  "version": "1.0.0",
+  "description": "unrestricted. untraceable. absolute.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@titaniumnetwork-dev/ultraviolet": "^3.2.5",
+    "@tomphttp/bare-server-node": "^2.0.3"
+  }
+}

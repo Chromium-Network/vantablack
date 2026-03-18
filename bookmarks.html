@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>vantablack — bookmarks</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
+    :root{--bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--border:#222;--border-bright:#333;--text:#c8c8c8;--text-dim:#555;--text-bright:#e8e8e8;--accent:#e63946;--accent2:#ff6b6b;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--transition:cubic-bezier(0.23,1,0.32,1);}
+    [data-theme="cyan"]{--accent:#00d4ff;--accent2:#7fffff;}[data-theme="mono"]{--accent:#aaaaaa;--accent2:#cccccc;}[data-theme="green"]{--accent:#39e67a;--accent2:#6bffaa;}[data-theme="purple"]{--accent:#a855f7;--accent2:#c084fc;}[data-theme="orange"]{--accent:#f97316;--accent2:#fb923c;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-mono);}
+    .noise{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+    .topbar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:rgba(8,8,8,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:200;}
+    .logo{font-family:var(--font-display);font-weight:800;font-size:1rem;letter-spacing:0.1em;color:var(--text-bright);text-decoration:none;}
+    .logo .accent{color:var(--accent);}
+    .nav-links { display: flex; align-items: center; gap: 20px; }
+    .nav-link{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:color 0.2s;cursor:pointer;background:none;border:none;padding:0;font-family:var(--font-mono);}
+    .nav-link:hover,.nav-link.active{color:var(--text-bright);}
+    .nav-dropdown{position:relative;}
+    .dropdown-toggle{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);background:none;border:none;cursor:pointer;font-family:var(--font-mono);padding:0;transition:color 0.2s;}
+    .dropdown-toggle:hover,.dropdown-toggle.active{color:var(--text-bright);}
+    .dropdown-menu{display:none;position:absolute;top:calc(100% + 10px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:4px;min-width:140px;overflow:hidden;z-index:300;}
+    .dropdown-menu.open{display:block;}
+    .dropdown-item{display:block;padding:9px 16px;font-size:0.68rem;letter-spacing:0.1em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:background 0.15s,color 0.15s;}
+    .dropdown-item:hover,.dropdown-item.active{background:var(--bg3);color:var(--text-bright);}
+    .page{padding:90px 32px 80px;max-width:900px;margin:0 auto;}
+    .page-header{margin-bottom:32px;animation:fadeUp 0.5s var(--transition) both;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+    .page-title{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--text-bright);letter-spacing:0.05em;margin-bottom:8px;}
+    .page-title span{color:var(--accent);}
+    .page-sub{font-size:0.62rem;letter-spacing:0.25em;color:var(--text-dim);text-transform:uppercase;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+    /* Add form */
+    .add-form{
+      display:flex;gap:8px;margin-bottom:28px;
+      animation:fadeUp 0.5s 0.08s var(--transition) both;
+      flex-wrap:wrap;
+    }
+    .add-input{
+      flex:1;min-width:180px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;
+      padding:10px 14px;color:var(--text-bright);font-family:var(--font-mono);font-size:0.75rem;
+      outline:none;transition:border-color 0.2s;
+    }
+    .add-input:focus{border-color:var(--border-bright);}
+    .add-input::placeholder{color:var(--text-dim);}
+    .add-btn{
+      background:var(--accent);border:none;border-radius:4px;color:#fff;
+      font-family:var(--font-mono);font-size:0.68rem;font-weight:700;letter-spacing:0.08em;
+      padding:10px 18px;cursor:pointer;transition:opacity 0.2s;white-space:nowrap;flex-shrink:0;
+    }
+    .add-btn:hover{opacity:0.85;}
+
+    /* Count */
+    .bm-count{font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px;}
+
+    /* Grid */
+    .bm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+
+    .bm-card{
+      background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+      padding:14px 16px;display:flex;align-items:center;gap:12px;
+      transition:border-color 0.2s,transform 0.2s var(--transition);
+      animation:fadeUp 0.35s var(--transition) both;
+    }
+    .bm-card:hover{border-color:var(--border-bright);transform:translateY(-2px);}
+    .bm-favicon{
+      width:28px;height:28px;border-radius:4px;background:var(--bg3);
+      border:1px solid var(--border);flex-shrink:0;object-fit:contain;
+      display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:var(--text-dim);
+    }
+    .bm-favicon img{width:100%;height:100%;object-fit:contain;border-radius:3px;}
+    .bm-info{flex:1;min-width:0;}
+    .bm-title{font-size:0.75rem;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+    .bm-url{font-size:0.6rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.03em;}
+    .bm-actions{display:flex;gap:4px;flex-shrink:0;}
+    .bm-btn{
+      width:26px;height:26px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      font-size:0.65rem;color:var(--text-dim);transition:all 0.15s;
+    }
+    .bm-btn:hover{border-color:var(--border-bright);color:var(--text-bright);}
+    .bm-btn.delete:hover{border-color:var(--accent);color:var(--accent);}
+
+    /* Empty */
+    .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:12px;text-align:center;border:1px dashed var(--border);border-radius:6px;}
+    .empty-icon{font-size:1.5rem;color:var(--accent);opacity:0.3;}
+    .empty-text{font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text-dim);}
+    .empty-sub{font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;}
+
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  
+.nav-dropdown { position: relative; }
+.dropdown-toggle {
+  font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-dim);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); padding: 0; transition: color 0.2s;
+  text-transform: lowercase;
+}
+.dropdown-toggle:hover, .dropdown-toggle.active { color: var(--text-bright); }
+.dropdown-menu {
+  display: none; position: absolute; top: calc(100% + 10px); right: 0;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 4px;
+  min-width: 140px; overflow: hidden; z-index: 300;
+}
+.dropdown-menu.open { display: block; animation: dropIn 0.15s var(--transition); }
+.dropdown-item {
+  display: block; padding: 9px 16px; font-size: 0.68rem;
+  letter-spacing: 0.1em; color: var(--text-dim); text-decoration: none;
+  text-transform: lowercase; transition: background 0.15s, color 0.15s;
+}
+.dropdown-item:hover, .dropdown-item.active { background: var(--bg3); color: var(--text-bright); }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+  
+/* ── Page animations ─────────────────────────────────────── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+.anim-1 { animation: fadeUp 0.5s 0.05s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-2 { animation: fadeUp 0.5s 0.12s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-3 { animation: fadeUp 0.5s 0.19s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-4 { animation: fadeUp 0.5s 0.26s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-5 { animation: fadeUp 0.5s 0.33s cubic-bezier(0.23,1,0.32,1) both; }
+.anim-fade { animation: fadeIn 0.5s 0.05s both; }
+
+  
+/* ── Custom cursor ───────────────────────────────────────── */
+*, *::before, *::after { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23F85050" stroke="%23000000" stroke-width="2" d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z"></path></svg>') 0 0, auto !important; }
+
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <nav class="topbar">
+    <a href="index.html" class="logo">vanta<span class="accent">black</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">home</a>
+      <a href="games.html" class="nav-link">games</a>
+      <a href="music.html" class="nav-link">music</a>
+      <a href="proxy.html" class="nav-link">proxy</a>
+      <a href="ai.html" class="nav-link">AI</a>
+      <a href="index.html" class="nav-link">settings</a>
+      <div class="nav-dropdown">
+        <button class="dropdown-toggle active" id="moreBtn">more ▾</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+        <a href="about.html" class="dropdown-item">about</a>
+        <a href="changelog.html" class="dropdown-item">changelog</a>
+        <a href="themes.html" class="dropdown-item">themes</a>
+        <a href="bookmarks.html" class="dropdown-item active">bookmarks</a>
+        <a href="partners.html" class="dropdown-item">partners</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">book<span>marks</span></div>
+        <div class="page-sub">saved sites — stored locally</div>
+      </div>
+    </div>
+
+    <div class="add-form">
+      <input type="text" class="add-input" id="bmTitle" placeholder="name (optional)"/>
+      <input type="text" class="add-input" id="bmUrl" placeholder="https://example.com"/>
+      <button class="add-btn" id="addBtn">+ add</button>
+    </div>
+
+    <div class="bm-count" id="bmCount"></div>
+    <div id="bmContainer"></div>
+  </div>
+
+  <script>
+    try{const s=JSON.parse(localStorage.getItem('vanta_settings')||'{}');if(s.theme)document.documentElement.setAttribute('data-theme',s.theme);}catch{}
+
+    const STORAGE_KEY = 'vanta_bookmarks';
+
+    function load() {
+      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }catch{ return []; }
+    }
+    function save(bms) {
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(bms)); }catch{}
+    }
+
+    function getFavicon(url) {
+      try{ return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`; }catch{ return null; }
+    }
+
+    function getHostname(url) {
+      try{ return new URL(url).hostname; }catch{ return url; }
+    }
+
+    function render() {
+      const bms = load();
+      const container = document.getElementById('bmContainer');
+      const count = document.getElementById('bmCount');
+      count.textContent = bms.length + ' bookmark' + (bms.length !== 1 ? 's' : '');
+
+      if (bms.length === 0) {
+        container.innerHTML = `<div class="empty-state">
+          <div class="empty-icon">◈</div>
+          <div class="empty-text">no bookmarks yet</div>
+          <div class="empty-sub">add a URL above to get started</div>
+        </div>`;
+        return;
+      }
+
+      container.innerHTML = `<div class="bm-grid">${bms.map((bm, i) => `
+        <div class="bm-card" style="animation-delay:${i*0.03}s">
+          <div class="bm-favicon">
+            <img src="${getFavicon(bm.url)}" onerror="this.parentElement.textContent='◈'" alt="">
+          </div>
+          <div class="bm-info">
+            <div class="bm-title">${bm.title || getHostname(bm.url)}</div>
+            <div class="bm-url">${getHostname(bm.url)}</div>
+          </div>
+          <div class="bm-actions">
+            <button class="bm-btn" onclick="openBm(${i})" title="Open in proxy">↗</button>
+            <button class="bm-btn delete" onclick="deleteBm(${i})" title="Delete">✕</button>
+          </div>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    window.openBm = function(i) {
+      const bms = load();
+      sessionStorage.setItem('vanta_target', bms[i].url);
+      window.location.href = 'proxy.html';
+    };
+
+    window.deleteBm = function(i) {
+      const bms = load();
+      bms.splice(i, 1);
+      save(bms);
+      render();
+    };
+
+    document.getElementById('addBtn').addEventListener('click', () => {
+      const urlEl = document.getElementById('bmUrl');
+      const titleEl = document.getElementById('bmTitle');
+      let url = urlEl.value.trim();
+      if (!url) return;
+      if (!url.includes('://')) url = 'https://' + url;
+      try { new URL(url); } catch { urlEl.style.borderColor='var(--accent)'; setTimeout(()=>urlEl.style.borderColor='',1000); return; }
+      const bms = load();
+      bms.unshift({ url, title: titleEl.value.trim(), added: Date.now() });
+      save(bms);
+      urlEl.value = '';
+      titleEl.value = '';
+      render();
+    });
+
+    document.getElementById('bmUrl').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('addBtn').click(); });
+
+    render();
+
+    const btn=document.getElementById('moreBtn');const menu=document.getElementById('dropdownMenu');
+    if(btn&&menu){btn.addEventListener('click',e=>{e.stopPropagation();menu.classList.toggle('open');});document.addEventListener('click',()=>menu.classList.remove('open'));}
+  
+
+  </script>
+
+  <script>
+  document.querySelectorAll('.page-header').forEach(el => el.classList.add('anim-1'));
+  document.querySelectorAll('.add-form').forEach(el => el.classList.add('anim-2'));
+  document.querySelectorAll('#bmContainer').forEach(el => el.classList.add('anim-3'));
+  </script>
+</body>
+</html>

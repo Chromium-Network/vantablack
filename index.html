@@ -97,13 +97,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 .site-title {
   font-family: var(--font-display); font-size: clamp(2.5rem, 8vw, 5.5rem);
-  font-weight: 300; letter-spacing: 0.25em; color: rgba(200,200,200,0.18);
+  font-weight: 800; letter-spacing: 0.1em; color: var(--text-bright);
   display: flex; gap: 0.02em; user-select: none;
 }
 .t-char { display: inline-block; animation: charIn 0.6s calc(var(--i) * 0.05s + 0.3s) var(--transition) both; }
 @keyframes charIn { from { opacity: 0; transform: translateY(10px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.t-char.accent-dot { color: var(--accent); opacity: 0.6 !important; }
-.subtitle { margin-top: 12px; font-size: 0.65rem; letter-spacing: 0.35em; color: var(--text-dim); text-transform: uppercase; animation: fadeUp 0.8s 0.7s var(--transition) both; }
+.t-char.accent-dot { color: var(--accent); opacity: 1 !important; }
+.t-char.t-vanta { color: var(--text-bright); }
+.t-char.t-black { color: var(--accent); }
+.subtitle { margin-top: 16px; font-size: 0.82rem; letter-spacing: 0.35em; color: rgba(200,200,200,0.45); text-transform: uppercase; animation: fadeUp 0.8s 0.7s var(--transition) both; }
 
 /* Search */
 .search-container { position: relative; width: 100%; max-width: 580px; animation: fadeUp 0.8s 0.4s var(--transition) both; }
@@ -205,7 +207,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <main class="hero">
     <div class="title-block">
       <h1 class="site-title">
-        <span class="t-char" style="--i:0">v</span><span class="t-char" style="--i:1">a</span><span class="t-char" style="--i:2">n</span><span class="t-char" style="--i:3">t</span><span class="t-char" style="--i:4">a</span><span class="t-char accent-dot" style="--i:5">·</span><span class="t-char" style="--i:6">b</span><span class="t-char" style="--i:7">l</span><span class="t-char" style="--i:8">a</span><span class="t-char" style="--i:9">c</span><span class="t-char" style="--i:10">k</span>
+        <span class="t-char t-vanta" style="--i:0">v</span><span class="t-char t-vanta" style="--i:1">a</span><span class="t-char t-vanta" style="--i:2">n</span><span class="t-char t-vanta" style="--i:3">t</span><span class="t-char t-vanta" style="--i:4">a</span><span class="t-char accent-dot" style="--i:5">·</span><span class="t-char t-black" style="--i:6">b</span><span class="t-char t-black" style="--i:7">l</span><span class="t-char t-black" style="--i:8">a</span><span class="t-char t-black" style="--i:9">c</span><span class="t-char t-black" style="--i:10">k</span>
       </h1>
       <p class="subtitle">unr3$tr!ct3d. untraceable. absolute.</p>
     </div>

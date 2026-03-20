@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>vantablack</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
+
+:root {
+  --bg: #080808;
+  --bg2: #0f0f0f;
+  --bg3: #161616;
+  --border: #222222;
+  --border-bright: #333;
+  --text: #c8c8c8;
+  --text-dim: #555;
+  --text-bright: #e8e8e8;
+  --accent: #e63946;
+  --accent2: #ff6b6b;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --topbar-h: 48px;
+}
+
+[data-theme="cyan"]  { --accent: #00d4ff; --accent2: #7fffff; }
+[data-theme="mono"]  { --accent: #aaaaaa; --accent2: #cccccc; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  overflow: hidden;
+}
+
+/* Noise */
+.noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+/* Topbar */
+.proxy-topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--topbar-h);
+  background: rgba(8,8,8,0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  z-index: 100;
+}
+
+.proxy-controls, .proxy-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ctrl-btn {
+  width: 32px;
+  height: 32px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.ctrl-btn:hover {
+  color: var(--text-bright);
+  border-color: var(--border-bright);
+  background: var(--bg2);
+}
+
+.proxy-urlbar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  height: 32px;
+  padding: 0 10px;
+  gap: 8px;
+  transition: border-color 0.2s;
+}
+
+.proxy-urlbar:focus-within { border-color: var(--border-bright); }
+
+.urlbar-icon { font-size: 0.7rem; flex-shrink: 0; color: var(--text-dim); }
+
+.urlbar-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+.urlbar-input::placeholder { color: var(--text-dim); }
+
+.urlbar-go {
+  background: var(--accent);
+  border: none;
+  border-radius: 3px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: opacity 0.2s;
+}
+
+.urlbar-go:hover { opacity: 0.85; }
+
+/* Loading bar */
+.loading-bar {
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0; right: 0;
+  height: 2px;
+  background: transparent;
+  z-index: 99;
+  overflow: hidden;
+}
+
+.loading-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* Frame */
+.proxy-frame-wrapper {
+  position: fixed;
+  top: calc(var(--topbar-h) + 2px);
+  left: 0; right: 0; bottom: 0;
+}
+
+.proxy-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.frame-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--bg);
+}
+
+.placeholder-logo {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: rgba(200,200,200,0.1);
+  letter-spacing: 0.15em;
+  animation: breathe 3s ease infinite;
+}
+
+.placeholder-logo .accent { color: rgba(230,57,70,0.35); }
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.frame-placeholder p {
+  font-size: 0.62rem;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* Side panel */
+.side-panel {
+  position: fixed;
+  top: var(--topbar-h);
+  right: 0; bottom: 0;
+  width: 300px;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  animation: slideInPanel 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes slideInPanel {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.side-panel.hidden { display: none; }
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.side-panel-header button {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: color 0.2s;
+}
+
+.side-panel-header button:hover { color: var(--accent); }
+
+.side-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Reuse setting-row styles in side panel */
+.sp-section-label {
+  font-size: 0.56rem;
+  letter-spacing: 0.28em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  margin-top: 16px;
+}
+
+.sp-section-label:first-child { margin-top: 0; }
+
+.sp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.sp-row:last-child { border-bottom: none; }
+
+.sp-label { font-size: 0.75rem; color: var(--text); }
+
+.sp-select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.slider::before {
+  content: '';
+  position: absolute;
+  left: 3px; top: 50%;
+  transform: translateY(-50%);
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.toggle-switch input:checked + .slider {
+  background: rgba(230,57,70,0.2);
+  border-color: var(--accent);
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(20px) translateY(-50%);
+  background: var(--accent);
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.hidden { display: none !important; }
+  
+    .nav-dropdown{position:relative;}
+    .dropdown-toggle{font-size:0.68rem;letter-spacing:0.15em;color:var(--text-dim);background:none;border:none;cursor:pointer;font-family:var(--font-mono);padding:0;transition:color 0.2s;text-transform:lowercase;}
+    .dropdown-toggle:hover,.dropdown-toggle.active{color:var(--text-bright);}
+    .dropdown-menu{display:none;position:absolute;top:calc(100% + 10px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:4px;min-width:140px;overflow:hidden;z-index:300;animation:dropIn 0.15s var(--transition);}
+    .dropdown-menu.open{display:block;}
+    .dropdown-item{display:block;padding:9px 16px;font-size:0.68rem;letter-spacing:0.1em;color:var(--text-dim);text-decoration:none;text-transform:lowercase;transition:background 0.15s,color 0.15s;}
+    .dropdown-item:hover,.dropdown-item.active{background:var(--bg3);color:var(--text-bright);}
+    @keyframes dropIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+
+  
+.nav-dropdown { position: relative; }
+.dropdown-toggle {
+  font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-dim);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono); padding: 0; transition: color 0.2s;
+  text-transform: lowercase;
+}
+.dropdown-toggle:hover, .dropdown-toggle.active { color: var(--text-bright); }
+.dropdown-menu {
+  display: none; position: absolute; top: calc(100% + 10px); right: 0;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 4px;
+  min-width: 140px; overflow: hidden; z-index: 300;
+}
+.dropdown-menu.open { display: block; animation: dropIn 0.15s var(--transition); }
+.dropdown-item {
+  display: block; padding: 9px 16px; font-size: 0.68rem;
+  letter-spacing: 0.1em; color: var(--text-dim); text-decoration: none;
+  text-transform: lowercase; transition: background 0.15s, color 0.15s;
+}
+.dropdown-item:hover, .dropdown-item.active { background: var(--bg3); color: var(--text-bright); }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+  
+/* ── Custom cursor ───────────────────────────────────────── */
+*, *::before, *::after { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23F85050" stroke="%23000000" stroke-width="2" d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z"></path></svg>') 0 0, auto !important; }
+
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="proxy-topbar">
+    <div class="proxy-controls">
+      <button class="ctrl-btn" id="backBtn">←</button>
+      <button class="ctrl-btn" id="fwdBtn">→</button>
+      <button class="ctrl-btn" id="reloadBtn">↺</button>
+    </div>
+    <div class="proxy-urlbar">
+      <span class="urlbar-icon">🔒</span>
+      <input type="text" id="proxyUrl" class="urlbar-input" placeholder="Search or enter URL..." spellcheck="false" autocomplete="off"/>
+      <button class="urlbar-go" id="goBtn">GO</button>
+    </div>
+    <div class="proxy-actions">
+      <button class="ctrl-btn" id="homeBtn">⌂</button>
+      <button class="ctrl-btn" id="proxySettingsBtn">⚙</button>
+    </div>
+  </div>
+  <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
+  <div class="proxy-frame-wrapper">
+    <iframe id="proxyFrame" class="proxy-frame" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
+    <div class="frame-placeholder" id="framePlaceholder">
+      <div class="placeholder-logo">vanta<span class="accent">black</span></div>
+      <p>ready to br0w$3</p>
+    </div>
+  </div>
+  <div class="side-panel hidden" id="sidePanel">
+    <div class="side-panel-header"><span>⚙ SETTINGS</span><button id="closeSidePanel">✕</button></div>
+    <div class="side-panel-body" id="sidePanelBody"></div>
+  </div>
+  <script>
+// ─── VantaSettings ────────────────────────────────────────────────────────────
+// Shared settings module used by both index.html and search.html
+
+const VantaSettings = (() => {
+  const KEY = 'vanta_settings';
+
+  const DEFAULTS = {
+    theme:        'dark',
+    noise:        true,
+    scanlines:    true,
+    animations:   true,
+    searchEngine: 'ddg',
+    newTab:       false,
+    cloak:        false,
+    cloakAs:      'google',
+    clearOnClose: false,
+  };
+
+  const CLOAK_PRESETS = {
+    google:     { title: 'Google',          favicon: 'https://www.google.com/favicon.ico' },
+    drive:      { title: 'Google Drive',    favicon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' },
+    classroom:  { title: 'Google Classroom',favicon: 'https://ssl.gstatic.com/classroom/favicon.png' },
+    outlook:    { title: 'Outlook',         favicon: 'https://res.cdn.office.net/assets/mail/pwa/v1/pngs/favicon.png' },
+    docs:       { title: 'Google Docs',     favicon: 'https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico' },
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
+    } catch {
+      return { ...DEFAULTS };
+    }
+  }
+
+  function save(data) {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn('[vantablack] Could not save settings:', e);
+    }
+  }
+
+  function reset() {
+    try { localStorage.removeItem(KEY); } catch {}
+    return { ...DEFAULTS };
+  }
+
+  // Apply all visual settings to the current page
+  function apply(s) {
+    s = s || load();
+
+    // Theme
+    document.documentElement.setAttribute('data-theme', s.theme || 'dark');
+
+    // Noise
+    const noise = document.querySelector('.noise');
+    if (noise) noise.classList.toggle('hidden-overlay', !s.noise);
+
+    // Scanlines
+    const sl = document.querySelector('.scanlines');
+    if (sl) sl.classList.toggle('hidden-overlay', !s.scanlines);
+
+    // Animations
+    document.body.classList.toggle('no-anim', !s.animations);
+
+    // Tab cloaking
+    if (s.cloak && CLOAK_PRESETS[s.cloakAs]) {
+      const preset = CLOAK_PRESETS[s.cloakAs];
+      document.title = preset.title;
+      setFavicon(preset.favicon);
+    }
+
+    // Clear on close
+    if (s.clearOnClose) {
+      window.addEventListener('beforeunload', () => {
+        try { sessionStorage.clear(); } catch {}
+      });
+    }
+  }
+
+  function setFavicon(url) {
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = url;
+  }
+
+  function getEngine() {
+    const engines = {
+      ddg:    'https://html.duckduckgo.com/html/?q=',
+      google: 'https://www.google.com/search?q=',
+      bing:   'https://www.bing.com/search?q=',
+      brave:  'https://search.brave.com/search?q=',
+    };
+    return engines[load().searchEngine] || engines.ddg;
+  }
+
+  return { load, save, reset, apply, getEngine, DEFAULTS, CLOAK_PRESETS };
+})();
+
+// Auto-apply on load
+document.addEventListener('DOMContentLoaded', () => VantaSettings.apply());
+  </script>
+  <script>
+(function () {
+  const frame            = document.getElementById('proxyFrame');
+  const placeholder      = document.getElementById('framePlaceholder');
+  const urlInput         = document.getElementById('proxyUrl');
+  const goBtn            = document.getElementById('goBtn');
+  const backBtn          = document.getElementById('backBtn');
+  const fwdBtn           = document.getElementById('fwdBtn');
+  const reloadBtn        = document.getElementById('reloadBtn');
+  const homeBtn          = document.getElementById('homeBtn');
+  const proxySettingsBtn = document.getElementById('proxySettingsBtn');
+  const sidePanel        = document.getElementById('sidePanel');
+  const closeSidePanel   = document.getElementById('closeSidePanel');
+  const sidePanelBody    = document.getElementById('sidePanelBody');
+  const loadingFill      = document.getElementById('loadingFill');
+
+  const SEARCH = 'https://search.brave.com/search?q=';
+
+  // ── Encode/decode ─────────────────────────────────────────────────────────
+  function xorEncode(str) {
+    let out = '';
+    for (let i = 0; i < str.length; i++) out += String.fromCharCode(str.charCodeAt(i) ^ 2);
+    return btoa(out).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+
+  function xorDecode(enc) {
+    try {
+      const b64 = enc.replace(/-/g,'+').replace(/_/g,'/');
+      const pad = b64.length % 4 ? '='.repeat(4 - b64.length % 4) : '';
+      const raw = atob(b64 + pad);
+      let out = '';
+      for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ 2);
+      return out;
+    } catch { return null; }
+  }
+
+  function toProxyUrl(target) {
+    return '/proxy?url=' + xorEncode(target);
+  }
+
+  // ── Loading bar ───────────────────────────────────────────────────────────
+  let loadTimer = null, loadPct = 0;
+
+  function startLoad() {
+    loadPct = 10;
+    loadingFill.style.transition = 'none';
+    loadingFill.style.width = '10%';
+    clearInterval(loadTimer);
+    loadTimer = setInterval(() => {
+      if (loadPct < 80) {
+        loadPct += Math.random() * 7 + 1;
+        loadingFill.style.transition = 'width 0.3s ease';
+        loadingFill.style.width = Math.min(loadPct, 80) + '%';
+      }
+    }, 200);
+  }
+
+  function finishLoad() {
+    clearInterval(loadTimer);
+    loadingFill.style.transition = 'width 0.2s ease';
+    loadingFill.style.width = '100%';
+    setTimeout(() => {
+      loadingFill.style.transition = 'opacity 0.3s';
+      loadingFill.style.opacity = '0';
+      setTimeout(() => {
+        loadingFill.style.width = '0%';
+        loadingFill.style.opacity = '1';
+        loadPct = 0;
+      }, 350);
+    }, 300);
+  }
+
+  // ── Navigate ──────────────────────────────────────────────────────────────
+  function navigate(input) {
+    input = (input || '').trim();
+    if (!input) return;
+
+    // Never proxy our own pages
+    if (input.includes('search.html') || input.includes('index.html') || input.startsWith(window.location.origin + '/proxy?') === false && input.startsWith(window.location.origin)) {
+      return;
+    }
+
+    let targetUrl;
+    const looksLikeUrl = /^(https?:\/\/)|^([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/|$))/.test(input);
+    if (looksLikeUrl) {
+      targetUrl = input.includes('://') ? input : 'https://' + input;
+      try { new URL(targetUrl); } catch { targetUrl = SEARCH + encodeURIComponent(input); }
+    } else {
+      targetUrl = SEARCH + encodeURIComponent(input);
+    }
+
+    urlInput.value = targetUrl;
+    placeholder.style.display = 'none';
+    frame.style.display = 'block';
+    startLoad();
+    frame.src = toProxyUrl(targetUrl);
+  }
+
+  // ── Frame load — intercept all link clicks inside iframe ──────────────────
+  frame.addEventListener('load', () => {
+    finishLoad();
+
+    // Update address bar
+    try {
+      const src = frame.src;
+      const match = src.match(/[?&]url=([^&]+)/);
+      if (match) {
+        const decoded = xorDecode(match[1]);
+        if (decoded) urlInput.value = decoded;
+      }
+    } catch {}
+
+    // Intercept all clicks inside the iframe and route through proxy
+    try {
+      const doc = frame.contentDocument || frame.contentWindow.document;
+      if (!doc) return;
+
+      doc.addEventListener('click', (e) => {
+        const a = e.target.closest('a');
+        if (!a) return;
+
+        const href = a.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Resolve relative URLs against the current proxied URL
+        let resolved;
+        try {
+          resolved = new URL(href, urlInput.value).href;
+        } catch {
+          resolved = href;
+        }
+
+        navigate(resolved);
+      }, true);
+
+      // Also intercept form submissions (search within results pages)
+      doc.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (!form) return;
+        e.preventDefault();
+
+        const action = form.getAttribute('action') || urlInput.value;
+        let resolved;
+        try { resolved = new URL(action, urlInput.value).href; } catch { resolved = action; }
+
+        if (form.method && form.method.toLowerCase() === 'get') {
+          const data = new URLSearchParams(new FormData(form)).toString();
+          navigate(resolved + (resolved.includes('?') ? '&' : '?') + data);
+        } else {
+          navigate(resolved);
+        }
+      }, true);
+
+    } catch (err) {
+      // Cross-origin restriction — can't inject handlers, that's OK
+    }
+  });
+
+  frame.addEventListener('error', finishLoad);
+
+  // ── Controls ──────────────────────────────────────────────────────────────
+  goBtn.addEventListener('click', () => navigate(urlInput.value));
+  urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(urlInput.value); });
+  backBtn.addEventListener('click',   () => window.history.back());
+  fwdBtn.addEventListener('click',    () => window.history.forward());
+  reloadBtn.addEventListener('click', () => { if (frame.src) { startLoad(); frame.src = frame.src; } });
+  homeBtn.addEventListener('click',   () => { window.location.href = 'index.html'; });
+
+  // ── Settings side panel ───────────────────────────────────────────────────
+  function renderSidePanel() {
+    const st = VantaSettings.load();
+    sidePanelBody.innerHTML = `
+      <div class="sp-section-label">◈ APPEARANCE</div>
+      <div class="sp-row">
+        <span class="sp-label">Theme</span>
+        <select class="sp-select" id="sp_theme">
+          <option value="dark" ${st.theme==='dark'?'selected':''}>Dark</option>
+          <option value="cyan" ${st.theme==='cyan'?'selected':''}>Cyan Neon</option>
+          <option value="mono" ${st.theme==='mono'?'selected':''}>Monochrome</option>
+        </select>
+      </div>
+      <div class="sp-row">
+        <span class="sp-label">Noise overlay</span>
+        <label class="toggle-switch"><input type="checkbox" id="sp_noise" ${st.noise?'checked':''}><span class="slider"></span></label>
+      </div>
+      <div class="sp-section-label">⚡ PRIVACY</div>
+      <div class="sp-row">
+        <span class="sp-label">Tab cloaking</span>
+        <label class="toggle-switch"><input type="checkbox" id="sp_cloak" ${st.cloak?'checked':''}><span class="slider"></span></label>
+      </div>
+      <div class="sp-row" id="sp_cloak_row" style="${st.cloak?'':'opacity:0.4;pointer-events:none'}">
+        <span class="sp-label">Cloak as</span>
+        <select class="sp-select" id="sp_cloakAs">
+          <option value="google"    ${st.cloakAs==='google'   ?'selected':''}>Google</option>
+          <option value="drive"     ${st.cloakAs==='drive'    ?'selected':''}>Drive</option>
+          <option value="classroom" ${st.cloakAs==='classroom'?'selected':''}>Classroom</option>
+          <option value="outlook"   ${st.cloakAs==='outlook'  ?'selected':''}>Outlook</option>
+          <option value="docs"      ${st.cloakAs==='docs'     ?'selected':''}>Docs</option>
+        </select>
+      </div>
+    `;
+    function spSave(key, val) {
+      const s = VantaSettings.load(); s[key] = val; VantaSettings.save(s); VantaSettings.apply(s);
+    }
+    document.getElementById('sp_theme').addEventListener('change', e => spSave('theme', e.target.value));
+    document.getElementById('sp_noise').addEventListener('change', e => spSave('noise', e.target.checked));
+    document.getElementById('sp_cloak').addEventListener('change', e => {
+      spSave('cloak', e.target.checked);
+      const row = document.getElementById('sp_cloak_row');
+      row.style.opacity = e.target.checked ? '1' : '0.4';
+      row.style.pointerEvents = e.target.checked ? 'auto' : 'none';
+    });
+    document.getElementById('sp_cloakAs').addEventListener('change', e => spSave('cloakAs', e.target.value));
+  }
+
+  proxySettingsBtn.addEventListener('click', () => {
+    const isHidden = sidePanel.classList.contains('hidden');
+    sidePanel.classList.toggle('hidden', !isHidden);
+    if (isHidden) renderSidePanel();
+  });
+  closeSidePanel.addEventListener('click', () => sidePanel.classList.add('hidden'));
+
+  // ── Auto-load from sessionStorage ─────────────────────────────────────────
+  const target = sessionStorage.getItem('vanta_target');
+  if (target) {
+    sessionStorage.removeItem('vanta_target');
+    navigate(target);
+  }
+})();
+  
+
+  </script>
+  
+  <script>
+    const _mBtn = document.getElementById('moreBtn');
+    const _mMenu = document.getElementById('dropdownMenu');
+    if (_mBtn && _mMenu) {
+      _mBtn.addEventListener('click', e => { e.stopPropagation(); _mMenu.classList.toggle('open'); });
+      document.addEventListener('click', () => _mMenu.classList.remove('open'));
+    }
+  </script>
+</body>
+</html>

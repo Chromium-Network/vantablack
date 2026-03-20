@@ -50,6 +50,9 @@ function xorDecode(enc) {
 function serveStatic(req, res) {
   let reqPath = req.url.split('?')[0];
   if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
+  // Block subdomain register page from public access
+  if (reqPath === '/subdomain-register.html') { res.writeHead(404, {'Content-Type':'text/plain'}); res.end('Not found'); return; }
+  if (reqPath === '/proxy.html') { res.writeHead(301, {'Location':'/search.html'}); res.end(); return; }
   const resolved = path.resolve(path.join(ROOT, reqPath));
   if (!resolved.startsWith(path.resolve(ROOT))) {
     res.writeHead(403); res.end('Forbidden'); return;
@@ -249,11 +252,113 @@ function handleGemini(req, res) {
   });
 }
 
+
+// ── Cloudflare subdomain registration ────────────────────────────────────────
+// Set these in Leapcell environment variables:
+// CF_API_TOKEN  — Cloudflare API token with DNS edit permission
+// CF_ZONE_ID    — Your Cloudflare Zone ID (found on domain dashboard)
+// CF_DOMAIN     — Your domain e.g. vantablack.gg
+
+const CF_API_TOKEN = process.env.CF_API_TOKEN || '';
+const CF_ZONE_ID   = process.env.CF_ZONE_ID   || '';
+const CF_DOMAIN    = process.env.CF_DOMAIN     || '';
+
+// Simple in-memory rate limit (resets on server restart)
+const registrations = new Map();
+
+async function handleSubdomainRegister(req, res) {
+  const CORS = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+
+  if (req.method === 'OPTIONS') { res.writeHead(204, CORS); res.end(); return; }
+  if (req.method !== 'POST') { res.writeHead(405, CORS); res.end(JSON.stringify({error:'Method not allowed'})); return; }
+
+  let body = '';
+  req.on('data', c => { body += c; });
+  req.on('end', async () => {
+    let parsed;
+    try { parsed = JSON.parse(body); } catch { res.writeHead(400, CORS); res.end(JSON.stringify({error:'Invalid JSON'})); return; }
+
+    const { subdomain, target } = parsed;
+
+    // Validate subdomain
+    if (!subdomain || !/^[a-z0-9-]{1,32}$/.test(subdomain)) {
+      res.writeHead(400, CORS); res.end(JSON.stringify({error:'Invalid subdomain. Use lowercase letters, numbers, hyphens only.'})); return;
+    }
+    if (!target) {
+      res.writeHead(400, CORS); res.end(JSON.stringify({error:'Target is required'})); return;
+    }
+
+    // Rate limit by IP — 2 registrations per IP
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const count = registrations.get(ip) || 0;
+    if (count >= 2) {
+      res.writeHead(429, CORS); res.end(JSON.stringify({error:'Too many registrations from this IP'})); return;
+    }
+
+    // Reserved subdomains
+    const reserved = ['www','mail','ftp','admin','api','app','dev','test','staging','blog','shop','cdn','ns1','ns2','vantablack'];
+    if (reserved.includes(subdomain)) {
+      res.writeHead(400, CORS); res.end(JSON.stringify({error:'That subdomain is reserved'})); return;
+    }
+
+    if (!CF_API_TOKEN || !CF_ZONE_ID) {
+      res.writeHead(500, CORS); res.end(JSON.stringify({error:'Cloudflare not configured on server'})); return;
+    }
+
+    try {
+      // Create CNAME record via Cloudflare API
+      const cfRes = await new Promise((resolve, reject) => {
+        const payload = JSON.stringify({
+          type: 'CNAME',
+          name: subdomain,
+          content: target,
+          ttl: 1,
+          proxied: true
+        });
+        const opts = {
+          hostname: 'api.cloudflare.com',
+          path: `/client/v4/zones/${CF_ZONE_ID}/dns_records`,
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${CF_API_TOKEN}`,
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payload)
+          }
+        };
+        const chunks = [];
+        const r = https.request(opts, resp => {
+          resp.on('data', c => chunks.push(c));
+          resp.on('end', () => resolve({ status: resp.statusCode, body: Buffer.concat(chunks).toString() }));
+        });
+        r.on('error', reject);
+        r.write(payload);
+        r.end();
+      });
+
+      const cfData = JSON.parse(cfRes.body);
+      if (cfData.success) {
+        registrations.set(ip, count + 1);
+        res.writeHead(200, CORS);
+        res.end(JSON.stringify({ success: true, subdomain: `${subdomain}.${CF_DOMAIN}` }));
+      } else {
+        const errMsg = cfData.errors?.[0]?.message || 'Cloudflare error';
+        res.writeHead(400, CORS);
+        res.end(JSON.stringify({ error: errMsg }));
+      }
+    } catch (e) {
+      res.writeHead(502, CORS);
+      res.end(JSON.stringify({ error: 'Failed to reach Cloudflare: ' + e.message }));
+    }
+  });
+}
+
 // ── HTTP server ───────────────────────────────────────────────────────────────
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.url === '/proxy' || req.url.startsWith('/proxy?')) {
     handleProxy(req, res);
+  } else if (req.url === '/api/register-subdomain') {
+    handleSubdomainRegister(req, res);
   } else if (req.url === '/ai/chat') {
     handleGemini(req, res);
   } else {
